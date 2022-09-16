@@ -22,9 +22,17 @@ export default class Books extends Component {
     {{log @data}}
 
     <ul class="books">
-        {{#each @data.results as |book|}}
-            <li>{{book.title}} by <em>{{this.joinBy book.authors 'name'}}</em></li>
-        {{/each}}
+      {{#each @data.results as |book|}}
+        <li>
+          {{book.title}}
+          
+          {{#if book.authors.length}}
+            by <em>{{this.joinBy book.authors 'name'}}</em>
+          {{/if}}
+        </li>
+      {{else}}
+        <li>No books found.</li>
+      {{/each}}
     </ul>
   `;
 }

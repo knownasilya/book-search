@@ -36,6 +36,7 @@ export default class App extends Component {
   @tracked route = '';
   @tracked routeComponent: Component | undefined;
   @tracked routeData: unknown | undefined;
+  @tracked query: QueryParams | undefined;
 
   static template = hbs`
     <h1>Book Search</h1>
@@ -43,7 +44,7 @@ export default class App extends Component {
     <Form @router={{router}} @action="/books/search">
       <label>
         Search For Books
-        <input name='search' placeholder='Tolstoy' required={{true}}>
+        <input name='search' placeholder='Tolstoy' value={{this.query.search}} required={{true}}>
       </label>
 
       <button>Submit</button>
@@ -52,7 +53,7 @@ export default class App extends Component {
     
     <hr/>
     
-    <this.routeComponent @data={{this.routeData}}/>
+    <this.routeComponent @data={{this.routeData}} @query={{this.query}}/>
   `;
 
   constructor(owner: object, args: Record<string, unknown>) {
@@ -65,6 +66,7 @@ export default class App extends Component {
       const { component, data } = pageData ?? {};
       this.routeComponent = component;
       this.routeData = data;
+      this.query = page.query;
     });
   }
 }
