@@ -3,7 +3,7 @@ import Component, { hbs, tracked } from '@glimmerx/component';
 import { on } from '@glimmerx/modifier';
 import { Router, RouteParams, QueryParams } from './lib/router';
 // @ts-ignore
-import Form from './form';
+import Form from './Form';
 import map, { routes } from './routes';
 
 export const router = new Router(map);
