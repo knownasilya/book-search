@@ -1,0 +1,7 @@
+.books {
+  text-align: left;
+}
+
+.books li {
+  padding: 0.5em 0;
+}
