@@ -41,7 +41,7 @@ export default class App extends Component {
   static template = hbs`
     <h1>Book Search</h1>
 
-    <Form @router={{router}} @action="/books/search">
+    <Form @router={{router}} action="/books/search">
       <label>
         Search For Books
         <input name='search' placeholder='Tolstoy' value={{this.query.search}} required={{true}}>
@@ -49,7 +49,6 @@ export default class App extends Component {
 
       <button>Submit</button>
     </Form>
-
     
     <hr/>
     
