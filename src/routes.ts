@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import type Component from '@glimmerx/component';
+import Books from './Books';
 
 export const routes = {
   'book-search': createRoute('book-search', {
-    element: './Books.ts',
+    element: Books as any,
     urlTemplate: '/books/search',
     params: z.object({}).optional(),
     query: z.object({
