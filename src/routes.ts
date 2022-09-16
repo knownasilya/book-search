@@ -10,7 +10,7 @@ export const routes = {
       search: z.string(),
     }),
     loader: async ({ query }) => {
-      return fetch(`http://gutendex.com/books/?search=${query.search}`);
+      return fetch(`https://gutendex.com/books/?search=${query.search}`);
     },
   }),
 } as const;
