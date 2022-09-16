@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "ssr": "node server",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
