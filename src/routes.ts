@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import type Component from '@glimmerx/component';
 import Books from './Books';
+import BookModal from './BookModal';
 
 export const routes = {
-  'book-search': createRoute('book-search', {
+  books: createRoute('books', {
     element: Books as any,
-    urlTemplate: '/books/search',
+    urlTemplate: '/books',
     params: z.object({}).optional(),
     query: z.object({
       search: z.string(),
@@ -14,10 +15,23 @@ export const routes = {
       return fetch(`https://gutendex.com/books/?search=${query.search}`);
     },
   }),
+  'books.view': createRoute('books.view', {
+    element: BookModal as any,
+    urlTemplate: '/books/:bookId',
+    params: z.object({
+      bookId: z.string(),
+    }),
+    query: z.object({
+      search: z.string(),
+    }),
+    loader: async ({ params }) => {
+      return fetch(`https://gutendex.com/books/?ids=${params.bookId}`);
+    },
+  }),
 } as const;
 
-type Path = keyof typeof routes;
-type Route = typeof routes[keyof typeof routes];
+export type Path = keyof typeof routes;
+export type Route = typeof routes[keyof typeof routes];
 
 const map = Object.keys(routes).reduce<Record<Path, Route['urlTemplate']>>(
   (previous, current) => {
@@ -26,6 +40,8 @@ const map = Object.keys(routes).reduce<Record<Path, Route['urlTemplate']>>(
   },
   {} as Record<Path, Route['urlTemplate']>
 );
+
+export type RoutesMap = typeof map;
 
 export default map;
 

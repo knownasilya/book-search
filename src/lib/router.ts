@@ -15,7 +15,7 @@ type RouteMeta = [
   string,
   string[]
 ];
-type RouteResolvedData = { name: string; data: any };
+export type RouteResolvedData = { name: string; data: any };
 
 export class Router<T extends Record<string, string>> {
   routes: RouteMeta[] = [];
@@ -200,7 +200,7 @@ export class Router<T extends Record<string, string>> {
   }
   async open(path: string, redirect?: boolean) {
     let page = this.parse(path);
-    debugger;
+
     if (page !== false) {
       if (typeof history !== 'undefined') {
         if (redirect) {
@@ -278,7 +278,6 @@ export class Router<T extends Record<string, string>> {
       this._domHandlers.push([window, 'popstate', popState]);
     }
 
-    debugger;
     let page = this._parse(path);
 
     if (page !== false) {
