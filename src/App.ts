@@ -41,7 +41,7 @@ export default class App extends Component {
     </Form>
     
     <hr/>
-    <NestedRouter @router={{router}} @stack={{this.stack}} @params={{this.params}} />
+    <NestedRouter @router={{router}} @stack={{this.stack}} @params={{this.params}} @query={{this.query}} />
     {{!-- <this.routeComponent @data={{this.routeData}} @query={{this.query}}/> --}}
   `;
 

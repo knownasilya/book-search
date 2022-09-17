@@ -1,4 +1,4 @@
-import Component, { hbs, tracked } from '@glimmerx/component';
+import Component, { hbs } from '@glimmerx/component';
 import { on } from '@glimmerx/modifier';
 import { fn } from '@glimmerx/helper';
 import { RoutesMap } from './routes';
@@ -40,11 +40,10 @@ export default class Books extends Component<Signature> {
   };
 
   selectBook = (book: Book | undefined) => {
-    debugger;
     if (book) {
       const search = this.args.router.activeRoute?.page.query.search;
-      debugger;
-      this.args.router.openPage('books.view', { bookId: String(book?.id) }, {
+
+      this.args.router.openPage('books.view', { bookId: String(book.id) }, {
         search,
       } as any);
     }
@@ -69,6 +68,6 @@ export default class Books extends Component<Signature> {
       {{/each}}
     </ul>
 
-    {{!-- {{yield}} --}}
+    {{yield}}
   `;
 }

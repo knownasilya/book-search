@@ -1,6 +1,8 @@
 import Component, { hbs, tracked } from '@glimmerx/component';
 import Form from './Form';
 
+import './BookModal.css';
+
 interface Signature {
   Args: {
     data: any;
@@ -15,16 +17,23 @@ export default class BookModal extends Component<Signature> {
     return this.book.formats['image/jpeg'];
   }
   static template = hbs`
-    {{log @data}}
-    <dialog open='true'>
-        <Form @router={{@router}} action='/books'>
-            <h2>{{this.book.title}}</h2>
-            <img src={{this.bookImage}} alt='book cover' />
-
-            <button>
-                close
-            </button>
+    {{log 'modal' @data}}
+    <div class='modal'>
+        <Form @router={{@router}} action='/books' class='backdrop'>
+            <button name='search' value={{@query.search}}/>
         </Form>
-    </dialog>
+        <dialog open>
+            <Form @router={{@router}} action='/books'>
+                <h2>{{this.book.title}}</h2>
+                <img src={{this.bookImage}} alt='book cover' />
+
+                <input type='hidden' name='search' value={{@query.search}} />
+
+                <button>
+                    close
+                </button>
+            </Form>
+        </dialog>
+    </div>
   `;
 }

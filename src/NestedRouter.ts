@@ -1,5 +1,5 @@
 import Component, { hbs } from '@glimmerx/component';
-import { RouteParams, Router } from './lib/router';
+import { QueryParams, RouteParams, Router } from './lib/router';
 import { RoutesMap } from './routes';
 
 interface Signature {
@@ -7,6 +7,7 @@ interface Signature {
     router: Router<RoutesMap>;
     stack: { name: string; data: null | unknown }[];
     params?: RouteParams;
+    query?: QueryParams;
     components?: Record<string, Component>;
   };
 }
@@ -17,12 +18,11 @@ const DefaultRoute = hbs`
 
 export default class NestedRouter extends Component<Signature> {
   get tail() {
-    debugger;
     return this.parts.tail;
   }
   get parts() {
     const [head, ...tail] = this.args.stack;
-    debugger;
+
     return {
       head,
       tail,
@@ -30,6 +30,9 @@ export default class NestedRouter extends Component<Signature> {
   }
   get components() {
     return this.args.components ?? {};
+  }
+  get Self() {
+    return NestedRouter;
   }
   get Component() {
     return this.model?.component || this.components[this.route] || DefaultRoute;
@@ -41,17 +44,18 @@ export default class NestedRouter extends Component<Signature> {
     return (this.parts.head.data || {}) as Record<string, unknown>;
   }
   static template = hbs`
+    {{log 'stack' @stack}}
       {{#if @stack.length}}
+      {{log 'route' this.route this.tail}}
         <this.Component
           @route={{this.route}}
           @hasChildren={{this.tail.length}}
           @data={{this.model.data}}
           @params={{@params}}
+          @query={{@query}}
           @router={{@router}}
         >
-          {{#if this.tail.length}}
-            <this @components={{this.components}} @stack={{this.tail}} @params={{@params}} @router={{@router}} />
-          {{/if}}
+          <this.Self @components={{this.components}} @stack={{this.tail}} @params={{@params}} @query={{@query}} @router={{@router}} />
         </this.Component>
       {{/if}}
     `;

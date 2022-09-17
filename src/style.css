@@ -6,15 +6,3 @@
   color: #2c3e50;
   margin-top: 60px;
 }
-
-dialog {
-  position: absolute;
-  top: 200px;
-  left: 45%;
-  right: auto;
-}
-
-dialog::backdrop {
-  background-color: #ccc;
-  backdrop-filter: blur(5px);
-}
