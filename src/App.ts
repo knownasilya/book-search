@@ -22,7 +22,6 @@ router.mount();
 
 export default class App extends Component {
   @tracked route = '';
-  @tracked routeComponent?: Component;
   @tracked routeData?: unknown;
   @tracked query?: QueryParams;
   @tracked params?: RouteParams;
@@ -42,20 +41,15 @@ export default class App extends Component {
     
     <hr/>
     <NestedRouter @router={{router}} @stack={{this.stack}} @params={{this.params}} @query={{this.query}} />
-    {{!-- <this.routeComponent @data={{this.routeData}} @query={{this.query}}/> --}}
   `;
 
   constructor(owner: object, args: Record<string, unknown>) {
     super(owner, args);
-    console.log(routes);
 
     router.addHandler((page, pageData: any, stack) => {
       console.log('Updating component and data', page.path, { page, pageData });
-      const { component, data } = pageData ?? {};
 
       this.route = page.path;
-      this.routeComponent = component;
-      this.routeData = data;
       this.query = page.query;
       this.params = page.params;
       this.stack = stack;
