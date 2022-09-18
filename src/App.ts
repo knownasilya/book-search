@@ -21,8 +21,6 @@ router.addResolver('books.view', makeResolver('books.view'));
 router.mount();
 
 export default class App extends Component {
-  @tracked route = '';
-  @tracked routeData?: unknown;
   @tracked query?: QueryParams;
   @tracked params?: RouteParams;
   @tracked stack?: RouteResolvedData[];
@@ -49,7 +47,6 @@ export default class App extends Component {
     router.addHandler((page, pageData: any, stack) => {
       console.log('Updating component and data', page.path, { page, pageData });
 
-      this.route = page.path;
       this.query = page.query;
       this.params = page.params;
       this.stack = stack;

@@ -20,9 +20,11 @@ export type RouteResolvedData = { name: string; data: any };
 export class Router<T extends Record<string, string>> {
   routes: RouteMeta[] = [];
   prev!: string;
-  _addRoute(value: RouteMeta) {
+
+  private _addRoute(value: RouteMeta) {
     this.routes.push(value);
   }
+
   constructor(routes: T) {
     this.prev = '';
     Object.keys(routes).map((name) => {
@@ -46,6 +48,7 @@ export class Router<T extends Record<string, string>> {
       ]);
     });
   }
+
   getQueryParams(str: string) {
     const values: Record<string, string> = str.split('&').reduce((acc, el) => {
       const [key, val] = el.split('=');
@@ -56,6 +59,7 @@ export class Router<T extends Record<string, string>> {
     }, {} as Record<string, string>);
     return values;
   }
+
   parse(_path: string): Page | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
@@ -70,6 +74,7 @@ export class Router<T extends Record<string, string>> {
 
     return false;
   }
+
   private _parse(_path: string): Page | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
@@ -86,6 +91,7 @@ export class Router<T extends Record<string, string>> {
 
     return false;
   }
+
   _handlers: Array<
     (page: Page, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
@@ -93,6 +99,7 @@ export class Router<T extends Record<string, string>> {
     string,
     (params: RouteParams, query: QueryParams) => Promise<any>
   > = {};
+
   addResolver(
     routeName: keyof T,
     fn: (params: RouteParams, query: QueryParams) => Promise<any>
@@ -100,6 +107,7 @@ export class Router<T extends Record<string, string>> {
     this._resolvers[routeName as string] = fn;
     return this;
   }
+
   addHandler(
     fn: (page: Page, data?: any, stack?: RouteResolvedData[]) => void
   ): Router<T> {
@@ -113,18 +121,21 @@ export class Router<T extends Record<string, string>> {
       }
     }
   }
+
   activeRoute: null | { page: Page; data: any } = null;
   prevRoute: null | { page: Page; data: any } = null;
   _resolvedData: Record<
     string,
     { model: any; params: RouteParams; query?: QueryParams }
   > = {};
+
   dataForRoute(routeName: string) {
     if (!(routeName in this._resolvedData)) {
       return null;
     }
     return this._resolvedData[routeName].model;
   }
+
   async resolveRoute(route: string, params: RouteParams, query: QueryParams) {
     let data: any = null;
     if (!this.shouldResolveRoute(route, params, query)) {
@@ -135,6 +146,7 @@ export class Router<T extends Record<string, string>> {
     }
     return data;
   }
+
   shouldResolveRoute(name: keyof T, params: RouteParams, query: QueryParams) {
     // TODO: add custom user cache function
     if (!(name in this._resolvedData)) {
@@ -170,10 +182,13 @@ export class Router<T extends Record<string, string>> {
 
     return false;
   }
+
   stack: RouteResolvedData[] = [];
+
   unloadRouteData(routeName: string) {
     delete this._resolvedData[routeName];
   }
+
   async navigate(page: Page) {
     let data: any = null;
 
@@ -212,12 +227,14 @@ export class Router<T extends Record<string, string>> {
       await this.navigate(page);
     }
   }
+
   async popstate() {
     let page = this._parse(location.pathname + location.search);
     if (page !== false) {
       await this.navigate(page);
     }
   }
+
   onClick(rawEvent: MouseEvent) {
     const event = rawEvent as unknown as MouseEvent & {
       target: Element;
@@ -255,7 +272,9 @@ export class Router<T extends Record<string, string>> {
       }
     }
   }
+
   _domHandlers: [HTMLElement | Window, string, (e: any) => any][] = [];
+
   async mount(
     path = typeof location !== undefined
       ? location.pathname + location.search
@@ -284,6 +303,7 @@ export class Router<T extends Record<string, string>> {
       await this.navigate(page);
     }
   }
+
   unmount() {
     this._domHandlers.forEach(([element, eventName, fn]) => {
       element.removeEventListener(eventName, fn);

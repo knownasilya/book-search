@@ -4,9 +4,8 @@ import Books from './Books';
 import BookModal from './BookModal';
 
 export const routes = {
-  books: createRoute('books', {
+  books: route('/books', {
     element: Books as any,
-    urlTemplate: '/books',
     params: z.object({}).optional(),
     query: z.object({
       search: z.string(),
@@ -15,9 +14,8 @@ export const routes = {
       return fetch(`https://gutendex.com/books/?search=${query.search}`);
     },
   }),
-  'books.view': createRoute('books.view', {
+  'books.view': route('/books/:bookId', {
     element: BookModal as any,
-    urlTemplate: '/books/:bookId',
     params: z.object({
       bookId: z.string(),
     }),
@@ -45,31 +43,27 @@ export type RoutesMap = typeof map;
 
 export default map;
 
-function createRoute<
-  P extends string,
+function route<
   C extends string | Component,
   T extends z.ZodType<any, any, any>,
   Q extends z.ZodType<any, any, any>,
   D,
   U extends string
 >(
-  path: P,
+  urlTemplate: U,
   {
     element,
     params,
     query,
     loader,
-    urlTemplate,
   }: {
     element: C;
     params: T;
     query: Q;
     loader: (options: { params: z.infer<T>; query: z.infer<Q> }) => D;
-    urlTemplate: U;
   }
 ) {
   return {
-    path,
     element,
     urlTemplate,
     params,
