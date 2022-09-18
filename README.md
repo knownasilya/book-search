@@ -5,3 +5,13 @@ A playground for my dabblings in making a new router inspired by Ember and Remix
 ## Usage
 
 Start `yarn dev`. Open url that is logged.
+
+## TODO
+
+- [x] Nested routes
+- [x] Example of a modal route
+- [ ] Pagination (more routing example)
+- [ ] Router service
+- [ ] Better DX for defining routes
+- [ ] Loading components
+- [ ] Error components
