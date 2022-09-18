@@ -20,7 +20,9 @@ export default class BookModal extends Component<Signature> {
     {{log 'modal' @data}}
     <div class='modal'>
         <Form @router={{@router}} action='/books' class='backdrop'>
-            <button name='search' value={{@query.search}}/>
+            <input type='hidden' name='search' value={{@query.search}} />
+
+            <button />
         </Form>
         <dialog open>
             <Form @router={{@router}} action='/books'>
