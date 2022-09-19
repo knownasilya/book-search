@@ -1,11 +1,14 @@
 import Component, { hbs, tracked } from '@glimmerx/component';
 import Form from './Form';
+import { BookResult } from './Books';
 
 import './BookModal.css';
 
 interface Signature {
   Args: {
-    data: any;
+    data: {
+      results: BookResult[];
+    };
   };
 }
 
@@ -26,14 +29,46 @@ export default class BookModal extends Component<Signature> {
         </Form>
         <dialog open>
             <Form @router={{@router}} action='/books'>
-                <h2>{{this.book.title}}</h2>
-                <img src={{this.bookImage}} alt='book cover' />
+                <h2 class='header'>{{this.book.title}}</h2>
+                
+                <img class='left' src={{this.bookImage}} alt='book cover' />
+                
 
-                <input type='hidden' name='search' value={{@query.search}} />
+                <div class='right'>
+                    
+                    <fieldset>
+                        <legend>Author</legend>
+                        
+                        <ul>
+                            {{#each this.book.authors as |author|}}
+                                <li>
+                                    {{author.name}} <br>
+                                    {{author.birth_year}} - {{author.death_year}}
+                                </li>
+                            {{else}}
+                                <li>Author not mentioned</li>
+                            {{/each}}
+                        </ul>
+                    </fieldset>
 
-                <button>
-                    close
-                </button>
+                    <fieldset>
+                        <legend>Subjects</legend>
+                        <ul>
+                            {{#each this.book.subjects as |subject|}}
+                                <li>{{subject}}</li>
+                            {{/each}}
+                        </ul>
+                    </fieldset>
+
+                    <input type='hidden' name='search' value={{@query.search}} />
+
+                </div>
+
+                <div class='footer'>
+                    <button>
+                        Close
+                    </button>
+                </div>
             </Form>
         </dialog>
     </div>

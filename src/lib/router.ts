@@ -50,13 +50,10 @@ export class Router<T extends Record<string, string>> {
   }
 
   getQueryParams(str: string) {
-    const values: Record<string, string> = str.split('&').reduce((acc, el) => {
-      const [key, val] = el.split('=');
-      if (key.trim().length) {
-        acc[key.trim()] = decodeURIComponent(decodeURIComponent(val || ''));
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    const searchParams = new URLSearchParams(str);
+    const values: Record<string, string> = Object.fromEntries(
+      searchParams.entries()
+    );
     return values;
   }
 
@@ -191,7 +188,6 @@ export class Router<T extends Record<string, string>> {
 
   async navigate(page: Page) {
     let data: any = null;
-
     let parts = page.route.split('.');
     let routeParts = [];
     let routeStack: RouteResolvedData[] = [];
@@ -314,7 +310,11 @@ export class Router<T extends Record<string, string>> {
     this._handlers = [];
   }
 
-  openPage(name: keyof T, params: RouteParams, query?: QueryParams) {
+  openPage<K extends keyof T>(
+    name: K,
+    params: RouteParams,
+    query?: QueryParams
+  ) {
     this.open(getPagePath(this, name as string, params, query));
   }
 }
