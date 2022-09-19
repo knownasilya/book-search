@@ -25,13 +25,15 @@ export default class App extends Component {
   @tracked params?: RouteParams;
   @tracked stack?: RouteResolvedData[];
 
+  decode = (val: string) => val && decodeURIComponent(val);
+
   static template = hbs`
     <h1>Book Search</h1>
 
     <Form @router={{router}} action="/books">
       <label>
         Search For Books
-        <input name='search' placeholder='Tolstoy' value={{this.query.search}} required={{true}}>
+        <input name='search' placeholder='Tolstoy' value={{this.decode this.query.search}} required={{true}}>
       </label>
 
       <button>Submit</button>
