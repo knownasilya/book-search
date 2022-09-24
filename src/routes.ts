@@ -28,20 +28,11 @@ export const routes = {
   }),
 } as const;
 
-export type Path = keyof typeof routes;
-export type Route = typeof routes[keyof typeof routes];
+export type RoutesMap = typeof routes;
+export type Path = keyof RoutesMap;
+export type Route = RoutesMap[keyof typeof routes];
 
-const map = Object.keys(routes).reduce<Record<Path, Route['urlTemplate']>>(
-  (previous, current) => {
-    previous[current as Path] = routes[current as Path].urlTemplate;
-    return previous;
-  },
-  {} as Record<Path, Route['urlTemplate']>
-);
-
-export type RoutesMap = typeof map;
-
-export default map;
+export default routes;
 
 function route<
   C extends string | Component,

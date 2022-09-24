@@ -16,19 +16,26 @@ type RouteMeta = [
   string[]
 ];
 export type RouteResolvedData = { name: string; data: any };
+export type RouterMap = Record<string, { urlTemplate: string }>;
+type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
+  ? ParseUrlParams<path> & Partial<ParseUrlParams<optionalPath>>
+  : url extends `${infer start}/${infer rest}`
+  ? ParseUrlParams<start> & ParseUrlParams<rest>
+  : url extends `:${infer param}`
+  ? { [k in param]: string }
+  : {};
 
-export class Router<T extends Record<string, string>> {
+export class Router<T extends RouterMap> {
   routes: RouteMeta[] = [];
-  prev!: string;
+  prev: string = '';
 
   private _addRoute(value: RouteMeta) {
     this.routes.push(value);
   }
 
   constructor(routes: T) {
-    this.prev = '';
     Object.keys(routes).map((name) => {
-      let value = routes[name];
+      let value = routes[name].urlTemplate;
       value = value.replace(/\/$/g, '') || '/';
       let names = (value.match(/\/:\w+/g) || []).map((i) => i.slice(2));
       let pattern = value
@@ -312,7 +319,7 @@ export class Router<T extends Record<string, string>> {
 
   openPage<K extends keyof T>(
     name: K,
-    params: RouteParams,
+    params: ParseUrlParams<T[K]['urlTemplate']>,
     query?: QueryParams
   ) {
     this.open(getPagePath(this, name as string, params, query));
