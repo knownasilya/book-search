@@ -317,7 +317,7 @@ export class Router<T extends RouterMap> {
     this._handlers = [];
   }
 
-  openPage<K extends keyof T>(
+  go<K extends keyof T>(
     name: K,
     params: ParseUrlParams<T[K]['urlTemplate']>,
     query?: QueryParams

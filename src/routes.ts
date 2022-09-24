@@ -10,7 +10,7 @@ export const routes = {
     query: z.object({
       search: z.string(),
     }),
-    loader: async ({ query }) => {
+    data: async ({ query }) => {
       return fetch(`https://gutendex.com/books/?search=${query.search}`);
     },
   }),
@@ -22,7 +22,7 @@ export const routes = {
     query: z.object({
       search: z.string(),
     }),
-    loader: async ({ params }) => {
+    data: async ({ params }) => {
       return fetch(`https://gutendex.com/books/?ids=${params.bookId}`);
     },
   }),
@@ -46,12 +46,12 @@ function route<
     element,
     params,
     query,
-    loader,
+    data,
   }: {
     element: C;
     params: T;
     query: Q;
-    loader: (options: { params: z.infer<T>; query: z.infer<Q> }) => D;
+    data: (options: { params: z.infer<T>; query: z.infer<Q> }) => D;
   }
 ) {
   return {
@@ -59,6 +59,6 @@ function route<
     urlTemplate,
     params,
     query,
-    loader,
+    data,
   } as const;
 }

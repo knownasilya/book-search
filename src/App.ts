@@ -61,8 +61,9 @@ function makeResolver(path: Path) {
     const route = routes[path];
     const params = route.params.parse(page);
     const query = route.query.parse(queryParams);
-    const response = await route.loader({ params, query } as any);
-    let data = response;
+    let response = await route.data({ params, query } as any);
+    let data: Record<string, unknown> | Record<string, unknown>[] | Response =
+      response;
 
     if (response instanceof Response) {
       data = await response.json();

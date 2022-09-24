@@ -44,11 +44,7 @@ export default class Form extends Component<Signature> {
     const page = this.args.router.parse(url.pathname);
 
     if (page && method === 'get') {
-      this.args.router.openPage(
-        page.route as any,
-        page.params,
-        data as QueryParams
-      );
+      this.args.router.go(page.route as any, page.params, data as QueryParams);
     } else {
       throw new Error(
         `Form action '${url.pathname}' does not exist as a route with method '${method}'`

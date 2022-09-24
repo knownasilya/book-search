@@ -2,7 +2,7 @@ import Component, { hbs } from '@glimmerx/component';
 import { on } from '@glimmerx/modifier';
 import { fn } from '@glimmerx/helper';
 import { RoutesMap } from './routes';
-import { Router } from './lib/router';
+import { QueryParams, Router } from './lib/router';
 
 import './books.css';
 
@@ -43,10 +43,11 @@ export default class Books extends Component<Signature> {
   selectBook = (book: BookResult | undefined) => {
     if (book) {
       const search = this.args.router.activeRoute?.page.query.search;
-
-      this.args.router.openPage('books.view', { bookId: String(book.id) }, {
+      const query = {
         search,
-      } as any);
+      } as QueryParams;
+
+      this.args.router.go('books.view', { bookId: String(book.id) }, query);
     }
   };
 
