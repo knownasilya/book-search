@@ -5,7 +5,7 @@ import { RoutesMap } from './routes';
 interface Signature {
   Args: {
     router: Router<RoutesMap>;
-    stack: { name: string; data: null | unknown }[];
+    stack: { name: string; data: null | unknown; component: any }[];
     params?: RouteParams;
     query?: QueryParams;
     components?: Record<string, Component>;
@@ -35,12 +35,15 @@ export default class NestedRouter extends Component<Signature> {
     return NestedRouter;
   }
   get Component() {
-    return this.model?.component || this.components[this.route] || DefaultRoute;
+    return (
+      this.parts.head.component || this.components[this.route] || DefaultRoute
+    );
   }
   get route() {
     return this.parts.head.name;
   }
   get model() {
+    debugger;
     return (this.parts.head.data || {}) as Record<string, unknown>;
   }
   static template = hbs`
@@ -50,7 +53,7 @@ export default class NestedRouter extends Component<Signature> {
         <this.Component
           @route={{this.route}}
           @hasChildren={{this.tail.length}}
-          @data={{this.model.data}}
+          @data={{this.model}}
           @params={{@params}}
           @query={{@query}}
           @router={{@router}}

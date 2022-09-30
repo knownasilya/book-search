@@ -1,3 +1,5 @@
+import { never } from 'zod';
+
 export interface Page {
   path: string;
   route: string;
@@ -15,8 +17,11 @@ type RouteMeta = [
   string,
   string[]
 ];
-export type RouteResolvedData = { name: string; data: any };
-export type RouterMap = Record<string, { urlTemplate: string }>;
+export type RouteResolvedData = { name: string; data: any; component?: any };
+export type RouterMap = Record<
+  string,
+  { urlTemplate: string; element: any; loading: any; error: any }
+>;
 type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
   ? ParseUrlParams<path> & Partial<ParseUrlParams<optionalPath>>
   : url extends `${infer start}/${infer rest}`
@@ -24,16 +29,22 @@ type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
   : url extends `:${infer param}`
   ? { [k in param]: string }
   : {};
+type RouteStatus =
+  | { type: 'loading' }
+  | { type: 'error'; value: any }
+  | { type: 'data'; value: any };
 
 export class Router<T extends RouterMap> {
   routes: RouteMeta[] = [];
   prev: string = '';
+  map: T;
 
   private _addRoute(value: RouteMeta) {
     this.routes.push(value);
   }
 
   constructor(routes: T) {
+    this.map = routes;
     Object.keys(routes).map((name) => {
       let value = routes[name].urlTemplate;
       value = value.replace(/\/$/g, '') || '/';
@@ -96,6 +107,13 @@ export class Router<T extends RouterMap> {
     return false;
   }
 
+  _stackChangeHandlers: Array<
+    (
+      stack: RouteResolvedData[],
+      page: Page
+      // state: { type: 'loading' | 'data' | 'error'; value: any },
+    ) => void
+  > = [];
   _handlers: Array<
     (page: Page, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
@@ -122,6 +140,24 @@ export class Router<T extends RouterMap> {
     } finally {
       if (this.activeRoute) {
         fn(this.activeRoute.page, this.activeRoute.data, this.stack);
+      }
+    }
+  }
+
+  onStackChange(
+    fn: (stack: RouteResolvedData[], page: Page) => void
+  ): Router<T> {
+    this._stackChangeHandlers.push(fn);
+
+    try {
+      return this;
+    } finally {
+      if (this.activeRoute) {
+        fn(
+          this.stack,
+          this.activeRoute.page
+          // { type: 'data', value: this.activeRoute.data },
+        );
       }
     }
   }
@@ -202,13 +238,41 @@ export class Router<T extends RouterMap> {
     while (parts.length) {
       routeParts.push(parts.shift());
       const routeToResolve = routeParts.join('.');
-      data = await this.resolveRoute(routeToResolve, page.params, page.query);
-      routeStack.push({ name: routeToResolve, data });
-      this._resolvedData[routeToResolve] = {
-        model: data,
-        params: page.params,
-        query: page.query,
-      };
+
+      try {
+        this.stackChanged(
+          { type: 'loading' },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+        data = await this.resolveRoute(routeToResolve, page.params, page.query);
+        this.stackChanged(
+          { type: 'data', value: data },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+        routeStack.push({ name: routeToResolve, data });
+        this._resolvedData[routeToResolve] = {
+          model: data,
+          params: page.params,
+          query: page.query,
+        };
+      } catch (e) {
+        this.stackChanged(
+          { type: 'error', value: e },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+      }
     }
 
     this.prevRoute = this.activeRoute;
@@ -216,11 +280,50 @@ export class Router<T extends RouterMap> {
     this.stack = routeStack;
     this._handlers.forEach((fn) => fn(page, data, routeStack));
   }
+
+  stackChanged(
+    status: RouteStatus,
+    {
+      route,
+      currentStack,
+      page,
+    }: { route: string; currentStack: RouteResolvedData[]; page: Page }
+  ) {
+    let mapped = this.map[route];
+
+    switch (status.type) {
+      case 'loading': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.loading, data: null },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+      case 'error': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.error, data: status.value },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+      case 'data': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.element, data: status.value },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+    }
+  }
+
   async open(path: string, redirect?: boolean) {
     let page = this.parse(path);
 
     if (page !== false) {
-      if (typeof history !== 'undefined') {
+      if (window.history) {
         if (redirect) {
           history.replaceState(null, '', path);
         } else {

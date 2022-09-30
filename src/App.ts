@@ -46,8 +46,8 @@ export default class App extends Component {
   constructor(owner: object, args: Record<string, unknown>) {
     super(owner, args);
 
-    router.addHandler((page, pageData: any, stack) => {
-      console.log('Updating component and data', page.path, { page, pageData });
+    router.onStackChange((stack, page) => {
+      console.log('Updating component and data', page.path, { page, stack });
 
       this.query = page.query;
       this.params = page.params;
@@ -59,8 +59,8 @@ export default class App extends Component {
 function makeResolver(path: Path) {
   return async function (page: RouteParams, queryParams: QueryParams) {
     const route = routes[path];
-    const params = route.params.parse(page);
-    const query = route.query.parse(queryParams);
+    const params = route.params?.parse(page) ?? page;
+    const query = route.query?.parse(queryParams) ?? queryParams;
     let response = await route.data({ params, query } as any);
     let data: Record<string, unknown> | Record<string, unknown>[] | Response =
       response;
@@ -69,11 +69,11 @@ function makeResolver(path: Path) {
       data = await response.json();
     }
 
-    const element =
-      typeof route.element === 'string'
-        ? (await import(/* @vite-ignore */ route.element)).default
-        : route.element;
+    // const element =
+    //   typeof route.element === 'string'
+    //     ? (await import(/* @vite-ignore */ route.element)).default
+    //     : route.element;
 
-    return { data, component: element };
+    return data;
   };
 }
