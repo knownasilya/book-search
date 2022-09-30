@@ -249,7 +249,7 @@ export class Router<T extends RouterMap> {
           }
         );
         data = await this.resolveRoute(routeToResolve, page.params, page.query);
-        this.stackChanged(
+        routeStack = this.stackChanged(
           { type: 'data', value: data },
           {
             route: routeToResolve,
@@ -257,7 +257,6 @@ export class Router<T extends RouterMap> {
             page,
           }
         );
-        routeStack.push({ name: routeToResolve, data });
         this._resolvedData[routeToResolve] = {
           model: data,
           params: page.params,
@@ -288,7 +287,7 @@ export class Router<T extends RouterMap> {
       currentStack,
       page,
     }: { route: string; currentStack: RouteResolvedData[]; page: Page }
-  ) {
+  ): RouteResolvedData[] {
     let mapped = this.map[route];
 
     switch (status.type) {
@@ -298,7 +297,8 @@ export class Router<T extends RouterMap> {
           { name: route, component: mapped.loading, data: null },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
-        break;
+
+        return stack;
       }
       case 'error': {
         let stack = [
@@ -306,7 +306,8 @@ export class Router<T extends RouterMap> {
           { name: route, component: mapped.error, data: status.value },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
-        break;
+
+        return stack;
       }
       case 'data': {
         let stack = [
@@ -314,7 +315,8 @@ export class Router<T extends RouterMap> {
           { name: route, component: mapped.element, data: status.value },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
-        break;
+
+        return stack;
       }
     }
   }

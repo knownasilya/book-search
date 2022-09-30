@@ -42,8 +42,7 @@ export default class NestedRouter extends Component<Signature> {
   get route() {
     return this.parts.head.name;
   }
-  get model() {
-    debugger;
+  get data() {
     return (this.parts.head.data || {}) as Record<string, unknown>;
   }
   static template = hbs`
@@ -53,7 +52,7 @@ export default class NestedRouter extends Component<Signature> {
         <this.Component
           @route={{this.route}}
           @hasChildren={{this.tail.length}}
-          @data={{this.model}}
+          @data={{this.data}}
           @params={{@params}}
           @query={{@query}}
           @router={{@router}}
