@@ -1,3 +1,5 @@
+import { never } from 'zod';
+
 export interface Page {
   path: string;
   route: string;
@@ -15,20 +17,36 @@ type RouteMeta = [
   string,
   string[]
 ];
-export type RouteResolvedData = { name: string; data: any };
+export type RouteResolvedData = { name: string; data: any; component?: any };
+export type RouterMap = Record<
+  string,
+  { urlTemplate: string; element: any; loading: any; error: any }
+>;
+type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
+  ? ParseUrlParams<path> & Partial<ParseUrlParams<optionalPath>>
+  : url extends `${infer start}/${infer rest}`
+  ? ParseUrlParams<start> & ParseUrlParams<rest>
+  : url extends `:${infer param}`
+  ? { [k in param]: string }
+  : {};
+type RouteStatus =
+  | { type: 'loading' }
+  | { type: 'error'; value: any }
+  | { type: 'data'; value: any };
 
-export class Router<T extends Record<string, string>> {
+export class Router<T extends RouterMap> {
   routes: RouteMeta[] = [];
-  prev!: string;
+  prev: string = '';
+  map: T;
 
   private _addRoute(value: RouteMeta) {
     this.routes.push(value);
   }
 
   constructor(routes: T) {
-    this.prev = '';
+    this.map = routes;
     Object.keys(routes).map((name) => {
-      let value = routes[name];
+      let value = routes[name].urlTemplate;
       value = value.replace(/\/$/g, '') || '/';
       let names = (value.match(/\/:\w+/g) || []).map((i) => i.slice(2));
       let pattern = value
@@ -50,13 +68,10 @@ export class Router<T extends Record<string, string>> {
   }
 
   getQueryParams(str: string) {
-    const values: Record<string, string> = str.split('&').reduce((acc, el) => {
-      const [key, val] = el.split('=');
-      if (key.trim().length) {
-        acc[key.trim()] = decodeURIComponent(decodeURIComponent(val || ''));
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    const searchParams = new URLSearchParams(str);
+    const values: Record<string, string> = Object.fromEntries(
+      searchParams.entries()
+    );
     return values;
   }
 
@@ -92,6 +107,13 @@ export class Router<T extends Record<string, string>> {
     return false;
   }
 
+  _stackChangeHandlers: Array<
+    (
+      stack: RouteResolvedData[],
+      page: Page
+      // state: { type: 'loading' | 'data' | 'error'; value: any },
+    ) => void
+  > = [];
   _handlers: Array<
     (page: Page, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
@@ -118,6 +140,24 @@ export class Router<T extends Record<string, string>> {
     } finally {
       if (this.activeRoute) {
         fn(this.activeRoute.page, this.activeRoute.data, this.stack);
+      }
+    }
+  }
+
+  onStackChange(
+    fn: (stack: RouteResolvedData[], page: Page) => void
+  ): Router<T> {
+    this._stackChangeHandlers.push(fn);
+
+    try {
+      return this;
+    } finally {
+      if (this.activeRoute) {
+        fn(
+          this.stack,
+          this.activeRoute.page
+          // { type: 'data', value: this.activeRoute.data },
+        );
       }
     }
   }
@@ -191,7 +231,6 @@ export class Router<T extends Record<string, string>> {
 
   async navigate(page: Page) {
     let data: any = null;
-
     let parts = page.route.split('.');
     let routeParts = [];
     let routeStack: RouteResolvedData[] = [];
@@ -199,13 +238,41 @@ export class Router<T extends Record<string, string>> {
     while (parts.length) {
       routeParts.push(parts.shift());
       const routeToResolve = routeParts.join('.');
-      data = await this.resolveRoute(routeToResolve, page.params, page.query);
-      routeStack.push({ name: routeToResolve, data });
-      this._resolvedData[routeToResolve] = {
-        model: data,
-        params: page.params,
-        query: page.query,
-      };
+
+      try {
+        this.stackChanged(
+          { type: 'loading' },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+        data = await this.resolveRoute(routeToResolve, page.params, page.query);
+        this.stackChanged(
+          { type: 'data', value: data },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+        routeStack.push({ name: routeToResolve, data });
+        this._resolvedData[routeToResolve] = {
+          model: data,
+          params: page.params,
+          query: page.query,
+        };
+      } catch (e) {
+        this.stackChanged(
+          { type: 'error', value: e },
+          {
+            route: routeToResolve,
+            currentStack: routeStack,
+            page,
+          }
+        );
+      }
     }
 
     this.prevRoute = this.activeRoute;
@@ -213,11 +280,50 @@ export class Router<T extends Record<string, string>> {
     this.stack = routeStack;
     this._handlers.forEach((fn) => fn(page, data, routeStack));
   }
+
+  stackChanged(
+    status: RouteStatus,
+    {
+      route,
+      currentStack,
+      page,
+    }: { route: string; currentStack: RouteResolvedData[]; page: Page }
+  ) {
+    let mapped = this.map[route];
+
+    switch (status.type) {
+      case 'loading': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.loading, data: null },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+      case 'error': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.error, data: status.value },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+      case 'data': {
+        let stack = [
+          ...currentStack,
+          { name: route, component: mapped.element, data: status.value },
+        ];
+        this._stackChangeHandlers.forEach((fn) => fn(stack, page));
+        break;
+      }
+    }
+  }
+
   async open(path: string, redirect?: boolean) {
     let page = this.parse(path);
 
     if (page !== false) {
-      if (typeof history !== 'undefined') {
+      if (window.history) {
         if (redirect) {
           history.replaceState(null, '', path);
         } else {
@@ -314,7 +420,11 @@ export class Router<T extends Record<string, string>> {
     this._handlers = [];
   }
 
-  openPage(name: keyof T, params: RouteParams, query?: QueryParams) {
+  go<K extends keyof T>(
+    name: K,
+    params: ParseUrlParams<T[K]['urlTemplate']>,
+    query?: QueryParams
+  ) {
     this.open(getPagePath(this, name as string, params, query));
   }
 }

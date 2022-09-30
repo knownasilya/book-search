@@ -2,22 +2,23 @@ import Component, { hbs } from '@glimmerx/component';
 import { on } from '@glimmerx/modifier';
 import { fn } from '@glimmerx/helper';
 import { RoutesMap } from './routes';
-import { Router } from './lib/router';
+import { QueryParams, Router } from './lib/router';
 
 import './books.css';
 
-interface Book {
+export interface BookResult {
   id: number;
   title: string;
   formats: Record<string, string>;
-  authors: { name: string }[];
+  authors: { name: string; birth_year: number; death_year: number }[];
+  subjects: string[];
 }
 
 interface Signature {
   Args: {
     router: Router<RoutesMap>;
     data: {
-      results: Book[];
+      results: BookResult[];
     };
   };
 }
@@ -39,13 +40,14 @@ export default class Books extends Component<Signature> {
       .join(', ');
   };
 
-  selectBook = (book: Book | undefined) => {
+  selectBook = (book: BookResult | undefined) => {
     if (book) {
       const search = this.args.router.activeRoute?.page.query.search;
-
-      this.args.router.openPage('books.view', { bookId: String(book.id) }, {
+      const query = {
         search,
-      } as any);
+      } as QueryParams;
+
+      this.args.router.go('books.view', { bookId: String(book.id) }, query);
     }
   };
 
