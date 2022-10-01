@@ -17,7 +17,9 @@ export const routes = {
     }),
     data: async ({ query }) => {
       // throw new Error('Failed');
-      return fetch(`https://gutendex.com/books/?search=${query.search}`);
+      return fetch(
+        `https://gutendex.com/books/?search=${query.search}&languages=en`
+      );
     },
   }),
   'books.view': route('/books/:bookId', {
@@ -31,7 +33,7 @@ export const routes = {
       search: z.string(),
     }),
     data: async ({ params }) => {
-      return fetch(`https://gutendex.com/books/?ids=${params.bookId}`);
+      return fetch(`https://gutendex.com/books/${params.bookId}`);
     },
   }),
 } as const;
