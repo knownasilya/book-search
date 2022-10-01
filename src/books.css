@@ -5,3 +5,9 @@
 .books li {
   padding: 0.5em 0;
 }
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

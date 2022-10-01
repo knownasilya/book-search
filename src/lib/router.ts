@@ -188,6 +188,7 @@ export class Router<T extends RouterMap> {
   }
 
   shouldResolveRoute(name: keyof T, params: RouteParams, query: QueryParams) {
+    debugger;
     // TODO: add custom user cache function
     if (!(name in this._resolvedData)) {
       return true;
@@ -212,9 +213,10 @@ export class Router<T extends RouterMap> {
       return true;
     }
 
-    const queryChanged =
-      value.query &&
-      Object.keys(value.query).some((key) => value.query?.[key] !== query[key]);
+    const queryChanged = value.query
+      ? Object.keys(value.query).sort().join('') !==
+        Object.keys(query).sort().join('')
+      : !value.query && query;
 
     if (queryChanged) {
       return true;
@@ -428,6 +430,14 @@ export class Router<T extends RouterMap> {
     query?: QueryParams
   ) {
     this.open(getPagePath(this, name as string, params, query));
+  }
+
+  url<K extends keyof T>(
+    name: K,
+    params: ParseUrlParams<T[K]['urlTemplate']>,
+    query?: QueryParams
+  ) {
+    return getPagePath(this, name as string, params, query);
   }
 }
 

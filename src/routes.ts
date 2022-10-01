@@ -14,12 +14,11 @@ export const routes = {
     params: z.object({}).optional(),
     query: z.object({
       search: z.string(),
+      page: z.string().optional(),
     }),
     data: async ({ query }) => {
-      // throw new Error('Failed');
-      return fetch(
-        `https://gutendex.com/books/?search=${query.search}&languages=en`
-      );
+      const searchParams = new URLSearchParams({ ...query, languages: 'en' });
+      return fetch(`https://gutendex.com/books/?${searchParams}`);
     },
   }),
   'books.view': route('/books/:bookId', {
