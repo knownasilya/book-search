@@ -13,5 +13,6 @@ Start `yarn dev`. Open url that is logged.
 - [ ] Pagination (more routing example)
 - [ ] Router service
 - [ ] Better DX for defining routes
+- [x] TS types for params in urls
 - [x] Loading components
 - [x] Error components
