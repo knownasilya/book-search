@@ -1,6 +1,7 @@
 # book-search
 
 A playground for my dabblings in making a new router inspired by Ember and Remix with type coverage and great developer experience (we'll see).
+Router is completely based off https://github.com/lifeart/tiny-router 👏 to lifeart for writing it!
 
 ## Usage
 
