@@ -13,5 +13,5 @@ Start `yarn dev`. Open url that is logged.
 - [ ] Pagination (more routing example)
 - [ ] Router service
 - [ ] Better DX for defining routes
-- [ ] Loading components
-- [ ] Error components
+- [x] Loading components
+- [x] Error components
