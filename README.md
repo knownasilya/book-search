@@ -11,7 +11,7 @@ Start `yarn dev`. Open url that is logged.
 
 - [x] Nested routes
 - [x] Example of a modal route
-- [ ] Pagination (more routing example)
+- [x] Pagination (more routing example)
 - [ ] Router service
 - [ ] Better DX for defining routes
 - [ ] Stack based route renderer/APIs
