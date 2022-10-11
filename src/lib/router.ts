@@ -1,8 +1,6 @@
-import { z } from 'zod';
-
-export interface Page {
+export interface Page<RouteName> {
   path: string;
-  route: string;
+  route: RouteName;
   query: QueryParams;
   params: RouteParams;
 }
@@ -81,7 +79,7 @@ export class Router<T extends RouterMap> {
     return values;
   }
 
-  parse(_path: string): Page | false {
+  parse(_path: string): Page<keyof T> | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
     const qp = this.getQueryParams(qParams);
@@ -96,7 +94,7 @@ export class Router<T extends RouterMap> {
     return false;
   }
 
-  private _parse(_path: string): Page | false {
+  private _parse(_path: string): Page<keyof T> | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
     const qp = this.getQueryParams(qParams);
@@ -116,12 +114,12 @@ export class Router<T extends RouterMap> {
   _stackChangeHandlers: Array<
     (
       stack: RouteResolvedData[],
-      page: Page
+      page: Page<keyof T>
       // state: { type: 'loading' | 'data' | 'error'; value: any },
     ) => void
   > = [];
   _handlers: Array<
-    (page: Page, data?: any, stack?: RouteResolvedData[]) => void
+    (page: Page<keyof T>, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
   _resolvers: Record<
     keyof T,
@@ -137,7 +135,7 @@ export class Router<T extends RouterMap> {
   }
 
   addHandler(
-    fn: (page: Page, data?: any, stack?: RouteResolvedData[]) => void
+    fn: (page: Page<keyof T>, data?: any, stack?: RouteResolvedData[]) => void
   ): Router<T> {
     this._handlers.push(fn);
 
@@ -151,7 +149,7 @@ export class Router<T extends RouterMap> {
   }
 
   onStackChange(
-    fn: (stack: RouteResolvedData[], page: Page) => void
+    fn: (stack: RouteResolvedData[], page: Page<keyof T>) => void
   ): Router<T> {
     this._stackChangeHandlers.push(fn);
 
@@ -168,8 +166,8 @@ export class Router<T extends RouterMap> {
     }
   }
 
-  activeRoute: null | { page: Page; data: any } = null;
-  prevRoute: null | { page: Page; data: any } = null;
+  activeRoute: null | { page: Page<keyof T>; data: any } = null;
+  prevRoute: null | { page: Page<keyof T>; data: any } = null;
   _resolvedData: Record<
     keyof T,
     { model: any; params: RouteParams; query?: QueryParams }
@@ -194,7 +192,6 @@ export class Router<T extends RouterMap> {
   }
 
   shouldResolveRoute(name: keyof T, params: RouteParams, query: QueryParams) {
-    debugger;
     // TODO: add custom user cache function
     if (!(name in this._resolvedData)) {
       return true;
@@ -237,9 +234,9 @@ export class Router<T extends RouterMap> {
     delete this._resolvedData[routeName];
   }
 
-  async navigate(page: Page) {
+  async navigate(page: Page<keyof T>) {
     let data: any = null;
-    let parts = page.route.split('.');
+    let parts = (page.route as string).split('.');
     let routeParts: string[] = [];
     let routeStack: RouteResolvedData[] = [];
 
@@ -294,7 +291,11 @@ export class Router<T extends RouterMap> {
       route,
       currentStack,
       page,
-    }: { route: keyof T; currentStack: RouteResolvedData[]; page: Page }
+    }: {
+      route: keyof T;
+      currentStack: RouteResolvedData[];
+      page: Page<keyof T>;
+    }
   ): RouteResolvedData[] {
     let mapped = this.map[route];
 
