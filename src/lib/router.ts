@@ -1,4 +1,4 @@
-import { never } from 'zod';
+import { z } from 'zod';
 
 export interface Page {
   path: string;
@@ -20,7 +20,13 @@ type RouteMeta = [
 export type RouteResolvedData = { name: string; data: any; component?: any };
 export type RouterMap = Record<
   string,
-  { urlTemplate: string; element: any; loading: any; error: any }
+  {
+    urlTemplate: string;
+    element: any;
+    loading: any;
+    error: any;
+    query: any;
+  }
 >;
 type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
   ? ParseUrlParams<path> & Partial<ParseUrlParams<optionalPath>>
@@ -118,15 +124,15 @@ export class Router<T extends RouterMap> {
     (page: Page, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
   _resolvers: Record<
-    string,
+    keyof T,
     (params: RouteParams, query: QueryParams) => Promise<any>
-  > = {};
+  > = {} as any;
 
   addResolver(
     routeName: keyof T,
     fn: (params: RouteParams, query: QueryParams) => Promise<any>
   ): Router<T> {
-    this._resolvers[routeName as string] = fn;
+    this._resolvers[routeName] = fn;
     return this;
   }
 
@@ -165,18 +171,18 @@ export class Router<T extends RouterMap> {
   activeRoute: null | { page: Page; data: any } = null;
   prevRoute: null | { page: Page; data: any } = null;
   _resolvedData: Record<
-    string,
+    keyof T,
     { model: any; params: RouteParams; query?: QueryParams }
-  > = {};
+  > = {} as any;
 
-  dataForRoute(routeName: string) {
+  dataForRoute(routeName: keyof T) {
     if (!(routeName in this._resolvedData)) {
       return null;
     }
     return this._resolvedData[routeName].model;
   }
 
-  async resolveRoute(route: string, params: RouteParams, query: QueryParams) {
+  async resolveRoute(route: keyof T, params: RouteParams, query: QueryParams) {
     let data: any = null;
     if (!this.shouldResolveRoute(route, params, query)) {
       return this.dataForRoute(route);
@@ -234,12 +240,12 @@ export class Router<T extends RouterMap> {
   async navigate(page: Page) {
     let data: any = null;
     let parts = page.route.split('.');
-    let routeParts = [];
+    let routeParts: string[] = [];
     let routeStack: RouteResolvedData[] = [];
 
     while (parts.length) {
-      routeParts.push(parts.shift());
-      const routeToResolve = routeParts.join('.');
+      routeParts.push(parts.shift() as string);
+      const routeToResolve = routeParts.join('.') as keyof T;
 
       try {
         this.stackChanged(
@@ -288,7 +294,7 @@ export class Router<T extends RouterMap> {
       route,
       currentStack,
       page,
-    }: { route: string; currentStack: RouteResolvedData[]; page: Page }
+    }: { route: keyof T; currentStack: RouteResolvedData[]; page: Page }
   ): RouteResolvedData[] {
     let mapped = this.map[route];
 
@@ -296,7 +302,7 @@ export class Router<T extends RouterMap> {
       case 'loading': {
         let stack = [
           ...currentStack,
-          { name: route, component: mapped.loading, data: null },
+          { name: route as string, component: mapped.loading, data: null },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
 
@@ -305,7 +311,11 @@ export class Router<T extends RouterMap> {
       case 'error': {
         let stack = [
           ...currentStack,
-          { name: route, component: mapped.error, data: status.value },
+          {
+            name: route as string,
+            component: mapped.error,
+            data: status.value,
+          },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
 
@@ -314,7 +324,11 @@ export class Router<T extends RouterMap> {
       case 'data': {
         let stack = [
           ...currentStack,
-          { name: route, component: mapped.element, data: status.value },
+          {
+            name: route as string,
+            component: mapped.element,
+            data: status.value,
+          },
         ];
         this._stackChangeHandlers.forEach((fn) => fn(stack, page));
 
@@ -420,7 +434,7 @@ export class Router<T extends RouterMap> {
     });
     this.activeRoute = null;
     this.prevRoute = null;
-    this._resolvers = {};
+    this._resolvers = {} as any;
     this._handlers = [];
   }
 
