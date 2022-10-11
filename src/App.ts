@@ -57,11 +57,15 @@ export default class App extends Component {
 }
 
 function makeResolver(path: Path) {
-  return async function (page: RouteParams, queryParams: QueryParams) {
+  return async function (
+    page: RouteParams,
+    queryParams: QueryParams,
+    signal: AbortSignal
+  ) {
     const route = routes[path];
     const params = route.params?.parse(page) ?? page;
     const query = route.query?.parse(queryParams) ?? queryParams;
-    let response = await route.data({ params, query } as any);
+    let response = await route.data({ params, query, signal } as any);
     let data: Record<string, unknown> | Record<string, unknown>[] | Response =
       response;
 

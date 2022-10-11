@@ -16,9 +16,9 @@ export const routes = {
       search: z.string(),
       page: z.string().optional(),
     }),
-    data: async ({ query }) => {
+    data: async ({ query, signal }) => {
       const searchParams = new URLSearchParams({ ...query, languages: 'en' });
-      return fetch(`https://gutendex.com/books/?${searchParams}`);
+      return fetch(`https://gutendex.com/books/?${searchParams}`, { signal });
     },
   }),
   'books.view': route('/books/:bookId', {
@@ -66,7 +66,11 @@ function route<
     error?: E;
     params?: T;
     query?: Q;
-    data: (options: { params: z.infer<T>; query: z.infer<Q> }) => D;
+    data: (options: {
+      params: z.infer<T>;
+      query: z.infer<Q>;
+      signal: AbortSignal;
+    }) => D;
   }
 ) {
   return {

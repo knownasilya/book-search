@@ -38,6 +38,7 @@ export class Router<T extends RouterMap> {
   routes: RouteMeta[] = [];
   prev: string = '';
   map: T;
+  abortController?: AbortController;
 
   private _addRoute(value: RouteMeta) {
     this.routes.push(value);
@@ -119,12 +120,20 @@ export class Router<T extends RouterMap> {
   > = [];
   _resolvers: Record<
     string,
-    (params: RouteParams, query: QueryParams) => Promise<any>
+    (
+      params: RouteParams,
+      query: QueryParams,
+      signal: AbortSignal
+    ) => Promise<any>
   > = {};
 
   addResolver(
     routeName: keyof T,
-    fn: (params: RouteParams, query: QueryParams) => Promise<any>
+    fn: (
+      params: RouteParams,
+      query: QueryParams,
+      signal: AbortSignal
+    ) => Promise<any>
   ): Router<T> {
     this._resolvers[routeName as string] = fn;
     return this;
@@ -176,19 +185,23 @@ export class Router<T extends RouterMap> {
     return this._resolvedData[routeName].model;
   }
 
-  async resolveRoute(route: string, params: RouteParams, query: QueryParams) {
+  async resolveRoute(
+    route: string,
+    params: RouteParams,
+    query: QueryParams,
+    signal: AbortSignal
+  ) {
     let data: any = null;
     if (!this.shouldResolveRoute(route, params, query)) {
       return this.dataForRoute(route);
     }
     if (route in this._resolvers) {
-      data = await this._resolvers[route](params, query);
+      data = await this._resolvers[route](params, query, signal);
     }
     return data;
   }
 
   shouldResolveRoute(name: keyof T, params: RouteParams, query: QueryParams) {
-    debugger;
     // TODO: add custom user cache function
     if (!(name in this._resolvedData)) {
       return true;
@@ -232,10 +245,18 @@ export class Router<T extends RouterMap> {
   }
 
   async navigate(page: Page) {
+    if (this.abortController) {
+      this.abortController.abort();
+      console.log('abort signal');
+    }
+    console.log(`navigate: ${page.route}`);
+
     let data: any = null;
     let parts = page.route.split('.');
     let routeParts = [];
     let routeStack: RouteResolvedData[] = [];
+
+    this.abortController = new AbortController();
 
     while (parts.length) {
       routeParts.push(parts.shift());
@@ -250,7 +271,12 @@ export class Router<T extends RouterMap> {
             page,
           }
         );
-        data = await this.resolveRoute(routeToResolve, page.params, page.query);
+        data = await this.resolveRoute(
+          routeToResolve,
+          page.params,
+          page.query,
+          this.abortController.signal
+        );
         routeStack = this.stackChanged(
           { type: 'data', value: data },
           {
@@ -276,6 +302,7 @@ export class Router<T extends RouterMap> {
       }
     }
 
+    this.abortController = undefined;
     this.prevRoute = this.activeRoute;
     this.activeRoute = { page: page, data };
     this.stack = routeStack;
