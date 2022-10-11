@@ -78,12 +78,6 @@ export default class Books extends Component<Signature> {
       } as QueryParams;
 
       this.args.router.go('books.view', { bookId: String(book.id) }, query);
-      this.args.router.navigate({
-        params: {},
-        path: '',
-        route: 'books.view',
-        query: {},
-      });
     }
   };
 
