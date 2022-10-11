@@ -1,31 +1,31 @@
-export interface Page<RouteName> {
+import { z } from 'zod';
+
+export interface Page<R extends RouterMap> {
   path: string;
-  route: RouteName;
-  query: QueryParams;
+  route: keyof R;
+  query: z.infer<R[keyof R]['query']> | QueryParams;
   params: RouteParams;
 }
 
 export type RouteParams = Record<string, string>;
 export type QueryParams = Record<string, string>;
 
-type RouteMeta = [
-  string,
+type RouteMeta<RouteName> = [
+  RouteName,
   RegExp,
   (...args: string[]) => RouteParams,
   string,
   string[]
 ];
 export type RouteResolvedData = { name: string; data: any; component?: any };
-export type RouterMap = Record<
-  string,
-  {
-    urlTemplate: string;
-    element: any;
-    loading: any;
-    error: any;
-    query: any;
-  }
->;
+export type Route = {
+  urlTemplate: string;
+  element: any;
+  loading: any;
+  error: any;
+  query: any;
+};
+export type RouterMap = Record<string, Route>;
 type ParseUrlParams<url> = url extends `${infer path}(${infer optionalPath})`
   ? ParseUrlParams<path> & Partial<ParseUrlParams<optionalPath>>
   : url extends `${infer start}/${infer rest}`
@@ -39,11 +39,11 @@ type RouteStatus =
   | { type: 'data'; value: any };
 
 export class Router<T extends RouterMap> {
-  routes: RouteMeta[] = [];
+  routes: RouteMeta<keyof T>[] = [];
   prev: string = '';
   map: T;
 
-  private _addRoute(value: RouteMeta) {
+  private _addRoute(value: RouteMeta<keyof T>) {
     this.routes.push(value);
   }
 
@@ -79,7 +79,7 @@ export class Router<T extends RouterMap> {
     return values;
   }
 
-  parse(_path: string): Page<keyof T> | false {
+  parse(_path: string): Page<T> | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
     const qp = this.getQueryParams(qParams);
@@ -94,7 +94,7 @@ export class Router<T extends RouterMap> {
     return false;
   }
 
-  private _parse(_path: string): Page<keyof T> | false {
+  private _parse(_path: string): Page<T> | false {
     let rawPath = _path.replace(/\/$/, '') || '/';
     const [path, qParams = ''] = rawPath.split('?');
     const qp = this.getQueryParams(qParams);
@@ -114,12 +114,12 @@ export class Router<T extends RouterMap> {
   _stackChangeHandlers: Array<
     (
       stack: RouteResolvedData[],
-      page: Page<keyof T>
+      page: Page<T>
       // state: { type: 'loading' | 'data' | 'error'; value: any },
     ) => void
   > = [];
   _handlers: Array<
-    (page: Page<keyof T>, data?: any, stack?: RouteResolvedData[]) => void
+    (page: Page<T>, data?: any, stack?: RouteResolvedData[]) => void
   > = [];
   _resolvers: Record<
     keyof T,
@@ -135,7 +135,7 @@ export class Router<T extends RouterMap> {
   }
 
   addHandler(
-    fn: (page: Page<keyof T>, data?: any, stack?: RouteResolvedData[]) => void
+    fn: (page: Page<T>, data?: any, stack?: RouteResolvedData[]) => void
   ): Router<T> {
     this._handlers.push(fn);
 
@@ -149,7 +149,7 @@ export class Router<T extends RouterMap> {
   }
 
   onStackChange(
-    fn: (stack: RouteResolvedData[], page: Page<keyof T>) => void
+    fn: (stack: RouteResolvedData[], page: Page<T>) => void
   ): Router<T> {
     this._stackChangeHandlers.push(fn);
 
@@ -166,8 +166,8 @@ export class Router<T extends RouterMap> {
     }
   }
 
-  activeRoute: null | { page: Page<keyof T>; data: any } = null;
-  prevRoute: null | { page: Page<keyof T>; data: any } = null;
+  activeRoute: null | { page: Page<T>; data: any } = null;
+  prevRoute: null | { page: Page<T>; data: any } = null;
   _resolvedData: Record<
     keyof T,
     { model: any; params: RouteParams; query?: QueryParams }
@@ -234,7 +234,7 @@ export class Router<T extends RouterMap> {
     delete this._resolvedData[routeName];
   }
 
-  async navigate(page: Page<keyof T>) {
+  async navigate(page: Page<T>) {
     let data: any = null;
     let parts = (page.route as string).split('.');
     let routeParts: string[] = [];
@@ -294,7 +294,7 @@ export class Router<T extends RouterMap> {
     }: {
       route: keyof T;
       currentStack: RouteResolvedData[];
-      page: Page<keyof T>;
+      page: Page<T>;
     }
   ): RouteResolvedData[] {
     let mapped = this.map[route];

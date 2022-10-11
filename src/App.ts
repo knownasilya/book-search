@@ -49,7 +49,7 @@ export default class App extends Component {
     router.onStackChange((stack, page) => {
       console.log('Updating component and data', page.path, { page, stack });
 
-      this.query = page.query;
+      this.query = page.query as QueryParams;
       this.params = page.params;
       this.stack = stack;
     });

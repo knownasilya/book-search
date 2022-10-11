@@ -72,12 +72,18 @@ export default class Books extends Component<Signature> {
 
   selectBook = (book: BookResult | undefined) => {
     if (book) {
-      const search = this.args.router.activeRoute?.page.query.search;
+      const search = (this.args.router.activeRoute?.page.query as any).search;
       const query = {
         search,
       } as QueryParams;
 
       this.args.router.go('books.view', { bookId: String(book.id) }, query);
+      this.args.router.navigate({
+        params: {},
+        path: '',
+        route: 'books.view',
+        query: {},
+      });
     }
   };
 
