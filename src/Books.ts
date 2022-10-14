@@ -3,6 +3,7 @@ import { on } from '@glimmerx/modifier';
 import { fn } from '@glimmerx/helper';
 import { RoutesMap } from './routes';
 import { QueryParams, Router } from './lib/router';
+import Pagination from './Pagination';
 
 import './books.css';
 
@@ -21,36 +22,6 @@ interface Signature {
       results: BookResult[];
     };
   };
-}
-
-class Pagination extends Component<{
-  Args: { router: Router<RoutesMap>; next?: string; previous?: string };
-}> {
-  url = (value: string) => {
-    const url = new URL(value);
-    const qps = Object.fromEntries(url.searchParams.entries());
-    const query: Record<string, string> = {
-      search: qps.search,
-    };
-
-    if (qps.page) {
-      query.page = qps.page;
-    }
-
-    return this.args.router.url('books', {}, query);
-  };
-
-  static template = hbs`
-    <div class='pagination'>
-      {{#if @previous}}
-        <a href={{this.url @previous}}>Previous</a>
-      {{/if}}
-
-      {{#if @next}}
-        <a href={{this.url @next}}>Next</a>
-      {{/if}}
-    </div>
-  `;
 }
 
 export default class Books extends Component<Signature> {
@@ -73,11 +44,14 @@ export default class Books extends Component<Signature> {
   selectBook = (book: BookResult | undefined) => {
     if (book) {
       const search = (this.args.router.activeRoute?.page.query as any).search;
-      const query = {
-        search,
-      } as QueryParams;
 
-      this.args.router.go('books.view', { bookId: String(book.id) }, query);
+      this.args.router.go(
+        'books.view',
+        { bookId: String(book.id) },
+        {
+          search,
+        }
+      );
     }
   };
 

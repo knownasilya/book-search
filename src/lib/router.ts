@@ -442,7 +442,7 @@ export class Router<T extends RouterMap> {
   go<K extends keyof T>(
     name: K,
     params: ParseUrlParams<T[K]['urlTemplate']>,
-    query?: QueryParams
+    query?: z.infer<T[K]['query']>
   ) {
     this.open(getPagePath(this, name as string, params, query));
   }
@@ -450,7 +450,7 @@ export class Router<T extends RouterMap> {
   url<K extends keyof T>(
     name: K,
     params: ParseUrlParams<T[K]['urlTemplate']>,
-    query?: QueryParams
+    query?: z.infer<T[K]['query']>
   ) {
     return getPagePath(this, name as string, params, query);
   }
