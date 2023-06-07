@@ -11,9 +11,9 @@ import {
 import Form from './Form';
 // @ts-ignore
 import NestedRouter from './NestedRouter';
-import map, { Path, routes } from './routes';
+import { Path, routes } from './routes';
 
-export const router = new Router(map);
+export const router = new Router(routes);
 
 router.addResolver('books', makeResolver('books'));
 router.addResolver('books.view', makeResolver('books.view'));
@@ -56,6 +56,7 @@ export default class App extends Component {
   }
 }
 
+// TODO: move to router, shouldn't have to call `addResolver` manually, should happen internally.
 function makeResolver(path: Path) {
   return async function (page: RouteParams, queryParams: QueryParams) {
     const route = routes[path];
