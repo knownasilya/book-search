@@ -18,8 +18,6 @@ export const router = new Router(routes);
 router.addResolver('books', makeResolver('books'));
 router.addResolver('books.view', makeResolver('books.view'));
 
-router.mount();
-
 export default class App extends Component {
   @tracked query?: QueryParams;
   @tracked params?: RouteParams;
@@ -53,6 +51,8 @@ export default class App extends Component {
       this.params = page.params;
       this.stack = stack;
     });
+
+    router.mount();
   }
 }
 
