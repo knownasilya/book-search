@@ -9,6 +9,7 @@ Start `yarn dev`. Open url that is logged.
 
 ## TODO
 
+- [ ] (bug) Changing value uses old cache
 - [x] Nested routes
 - [x] Example of a modal route
 - [x] Pagination (more routing example)
