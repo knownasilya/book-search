@@ -217,8 +217,7 @@ export class Router<T extends RouterMap> {
     }
 
     const queryChanged = value.query
-      ? Object.keys(value.query).sort().join('') !==
-        Object.keys(query).sort().join('')
+      ? queryKey(value.query) !== queryKey(query)
       : !value.query && query;
 
     if (queryChanged) {
@@ -493,4 +492,11 @@ export function redirectPage(
   query?: QueryParams
 ) {
   router.open(getPagePath(router, name, params, query), true);
+}
+
+function queryKey(record: Record<string, string>) {
+  return Object.keys(record)
+    .map((key) => `${key}:${record[key]}`)
+    .sort()
+    .join('');
 }
