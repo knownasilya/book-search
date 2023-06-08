@@ -180,13 +180,29 @@ export class Router<T extends RouterMap> {
     return this._resolvedData[routeName].model;
   }
 
+  private cacheDataForRoute(
+    routeName: keyof T,
+    params: RouteParams,
+    query: QueryParams,
+    data: any
+  ) {
+    this._resolvedData[routeName] = {
+      model: data,
+      params,
+      query,
+    };
+  }
+
   async resolveRoute(route: keyof T, params: RouteParams, query: QueryParams) {
     let data: any = null;
+    // Use cached data
     if (!this.shouldResolveRoute(route, params, query)) {
       return this.dataForRoute(route);
     }
+    // Load data handlers for each route and cache
     if (route in this._resolvers) {
       data = await this._resolvers[route](params, query);
+      this.cacheDataForRoute(route, params, query, data);
     }
     return data;
   }
@@ -202,9 +218,9 @@ export class Router<T extends RouterMap> {
 
     if (!route) {
       throw new Error(
-        `Unknown route: ${
-          name as string
-        }, for chained routes, ensure you have defined parents`
+        `Unknown route: ${String(
+          name
+        )}, for chained routes, ensure you have defined parents`
       );
     }
 
@@ -261,11 +277,6 @@ export class Router<T extends RouterMap> {
             page,
           }
         );
-        this._resolvedData[routeToResolve] = {
-          model: data,
-          params: page.params,
-          query: page.query,
-        };
       } catch (e) {
         this.stackChanged(
           { type: 'error', value: e },
