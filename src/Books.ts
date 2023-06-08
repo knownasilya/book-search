@@ -60,7 +60,7 @@ export default class Books extends Component<Signature> {
       <ul class="books">
         {{#each @data.results as |book|}}
           <li>
-            <button type='button' {{on 'click' (fn this.selectBook book)}}>
+            <button type='button' style='text-align: left' {{on 'click' (fn this.selectBook book)}}>
               {{book.title}}
 
               {{#if book.authors.length}}
