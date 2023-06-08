@@ -9,15 +9,14 @@ Start `yarn dev`. Open url that is logged.
 
 ## TODO
 
-- [ ] (bug) Changing value uses old cache
 - [x] Nested routes
 - [x] Example of a modal route
 - [x] Pagination (more routing example)
 - [x] TS types for params in urls
 - [x] Loading components
 - [x] Error components
+- [x] (bug) Changing value uses old cache
 - [ ] AbortSignal
 - [ ] Router service
 - [ ] Better DX for defining routes
 - [ ] Stack based route renderer/APIs
-
